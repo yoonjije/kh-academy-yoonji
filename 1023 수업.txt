@@ -1,0 +1,197 @@
+#1
+오라클 테이블 만들기 실습(from, where)
+
+테이블 중 필요한 테이블만 출력하기
+SELECT * FROM 테이블이름 WHERE 테이블항목>500(조건식);
+EX)SELECT * FROM EMP WHERE sal>500;
+
+#2
+
+*논리부정
+SELECT *
+FROM emp
+WHERE NOT job = 'SALESMAN' ->세일즈맨 아닌사람 출력하기
+
+SELECT *
+FROM emp
+WHERE job IN ('PRESIDENT','SALESMAN');-> PRESIDENT, SALESMAN만 출력하기
+
+SELECT *
+FROM emp
+WHERE sal BETWEEN 1000 AND 1500; -> SAL 1000~1500사이만 출력하기
+
+*LIKE연산자(문자열 검색)
+
+SELECT *
+FROM emp
+WHERE ename LIKE'%MI%' ->문자열 검색할 수 있는 기능
+
+* IS NULL연산자
+ex)SELECT * FROM emp WHERE comm IS NULL;
+->값이 없는 칼럼을 조회
+
+*집합연산(UINON, UNION ALL)
+
+SELECT 열선택 FROM 테이블1
+UNION
+SELECT 열선택 FROM 테이블2
+-> 열은 같아야 함, 이름도, 자료형도
+
+*오라클 내장 함수
+SELECT func(열=테이블) from 테이블이름;
+
+ex)SELECT * FROM emp WHERE length(ename) <=4;
+이네임의 길이가 4이하의 칼럼 선택하는 예제
+
+*문자열 추출 및 위치
+
+- substr(선택할열, 시작할 문자 위치, 추출할 문자개수)
+ex)SELECT substr(ename, 2, 4) FROm emp; /* 2번 째 부터 4글자 추출*/인덱스 값이 1부터 시작함(유의할 것!!!!)
+
+-instr(문자 위치 반환)
+ex)SELECT instr(ename, 'L') FROM emp; L의 위치(번째) 찾는 방법(결과값 : 몇 번 째)
+
+-replace(선택할열, '타켓'(가지고 올 열), '변경할 문자')
+ex)SELECT replace(ename, 'AR', '') FROM emp;
+
+#3
+
+-문자열 패딩(지정한 특정 문자를 집어넣을 수 있다)/LPAD,RPAD(두 가지 종류)
+ex)SELECT PAD('121212-', 14, '*') FROM DUAL;
+PAD(선택할열, '채울글자 수', '채울 문자)
+
+-CONCAT(문자열 연결)
+ex)SELECT concat('str1', 'str2') as result FROM 테이블이름;
+concat(선택할열1, 선택할2)
+-열, 값이 같아도 됨.
+
+-숫자 처리 함수(쓰면 안 좋음,,)
+ROUND	특정 위치 반올림 (선택할 열(혹은 값)) 
+ex)SELECT round(값) FROM 테이블 이름;
+TRUNC	특정 위치 버림 (특정 위치 버리는 거)
+ex)SELECT trunc(선택할 열, 몇 번 째 이후로 버릴 것인지) FROM 테이블 이름;
+CEIL	천장 함수  
+FLOOR	바닥 함수
+**MOD	모듈러(자바의 %연산과 동일)
+ex) SELECT mod(나눠질 값, 나눌 값) FROM 테이블 이름;
+
+-날짜 데이터
+SELECT sysdate FROM 테이블 이름; 
+결과 값->20/10/23
+-날짜 연산
+SELECT SYSDATE AS now,
+       SYSDATE - 1 AS yesterday,
+       SYSDATE + 1 AS tomorrow,
+       (SYSDATE + 1) - (SYSDATE -1) AS offset
+FROM DUAL;
+결과 값->20/10/23	20/10/22	 20/10/24 2(이 일수만큼 차이난다)
+
+-현재 시스템 시간 값 넣기
+DROP TABLE dummy;
+CREATE TABLE dummy (
+    id number not null,
+    current_time timestamp default sysdate
+);
+INSERT INTO dummy(id) VALUES (10);
+SELECT * FROM dummy;
+
+-ADD_MONTHS(날짜,개월 수)
+SELECT add_months (SYSDATE, 3) FROM 테이블 이름;
+
+-MONTHS_BETWEEN(날짜1,날짜2)
+SELECT months_between (SYSDATE -1, SYSDATE +1) FROM 테이블 이름;
+
+-NEXT_DAY(기준일, '요일')
+SELECT next_day(SYSDATE, '월요일') FROM DUAL;
+next_day(날짜타입의 열(혹은 값), '월~일요일');
+->결과 값:20/10/26
+
+-TO_CHAR(날짜, 포맷문자열)
+ex)SELECT TO_CHAR(SYSDATE, 'CC YYYY/MM/DD HH24:MI:SS') FROM DUAL;
+cc- 몇 세기
+yyyy- 연도
+mm- 월
+dd -일
+hh24(24시 표기)
+mi -분
+ss -초
+
+- TO_DATE(날짜문자열, 포맷(형태))
+ex)SELECT TO_DATE('2020-10-13 03:02:24', 'YYYY-MM-DD HH24:MI:SS') FROM DUAL;
+
+-null값 처리 함수
+nv12(선택할 열, null이 아닌 경우 출력할 값, null인 경우 출력할 값);
+ex) SELECT ename, nvl2(comm, '커미션존재', '커미션없음')as 커미션존재유무 FROM emp;
+
+-분기 처리
+SELECT 열선택,
+  CASE
+         WHEN 조건식1 THEN 출력할값1
+        WHEN condition2 THEN result2
+        WHEN conditionN THEN resultN
+       ELSE result
+END;
+
+ex)
+SELECT sal,
+CASE
+    WHEN sal>= 500 AND 1000>sal THEN '500이상 1000미만' ELSE '1000미만'
+END
+FROM emp;
+조건식 and로 묶어줌.
+ex)
+SELECT sal,
+case
+    WHEN sal>= 500 AND 1000>sal THEN '500이상 1000미만' 
+    WHEN sal>= 1000 AND 1500>sal THEN '1000이상 1500미만'
+    WHEN sal>= 1500 AND 2000>sal THEN '1500이상 2000미만'
+    WHEN sal>= 2000 AND 2500>sal THEN '2000이상 1500미만'
+    ELSE '2500미만'
+END as lange (별명 만들어줌-> as 별명)
+    FROM emp;
+
+#4
+sum함수
+SELECT sum(선택할 열) FROM 테이블 이름;
+
+count함수(열 개수)
+SELECT count(선택할 열, *(전체)) FROM 테이블 이름;
+
+avg함수
+SELECT avg(선택할 열) FROM employee;
+
+그룹화
+예제)
+SELECT loc, COUNT(*)
+	FROM emp e
+	JOIN dept d ON e.deptno = d.deptno 
+GROUP BY loc
+;
+조인->그룹바이
+
+HAVING 절 - 조건부 그룹화
+
+#5
+-비등가조인
+예제)
+SELECT s.GRADE, e.*
+FROM employee e,
+     salary s
+WHERE e.SALARY BETWEEN s.LOW_SAL AND s.HIGH_SAL;
+
+-자체조인(자기 자신과 조인할 수 있다), 자세히 언급 안 함.
+
+-NOT(논리부정), IN(포함), BETWEEN(범위) 자세히 보기!
+
+-문자열 치환(REPLACE함수)
+
+-count에서 null포함 x
+
+//1.조인
+SELECT * FROM emp e JOIN dept d on e.deptno = d.deptno ORDER BY LOC;
+//2.그룹의 기준
+SELECT loc, FROM emp e JOIN dept d on e.deptno = d.deptno ORDER BY loc;
+//3.함수
+
+SELECT loc, count(*) FROM emp e JOIN dept d on e.deptno = d.deptno ORDER BY loc;
+
